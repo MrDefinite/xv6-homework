@@ -62,7 +62,7 @@ runcmd(struct cmd *cmd)
     if(ecmd->argv[0] == 0)
       exit(0);
     // Your code here ...
-    execve(ecmd->argv[0], ecmd->argv, ps_envp);
+    execvp(ecmd->argv[0], ecmd->argv);
     fprintf(stderr, "execution error!\n");
     break;
 
