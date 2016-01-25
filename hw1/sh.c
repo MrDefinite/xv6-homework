@@ -47,7 +47,6 @@ runcmd(struct cmd *cmd)
   struct execcmd *ecmd;
   struct pipecmd *pcmd;
   struct redircmd *rcmd;
-  char *ps_envp[] = {"PATH=/bin:/usr/bin", NULL};
 
   if(cmd == 0)
     exit(0);
@@ -69,17 +68,39 @@ runcmd(struct cmd *cmd)
   case '>':
   case '<':
     rcmd = (struct redircmd*)cmd;
-    fprintf(stderr, "redir not implemented\n");
     // Your code here ...
+    close(rcmd->fd);
+    if(open(rcmd->file, rcmd->mode, S_IRUSR | S_IWUSR) < 0){
+      fprintf(stderr, "open %s error\n", rcmd->file);
+      exit(0);
+    }
     runcmd(rcmd->cmd);
     break;
 
   case '|':
     pcmd = (struct pipecmd*)cmd;
-    fprintf(stderr, "pipe not implemented\n");
     // Your code here ...
+    pipe(p);
+    if(fork1() == 0) {
+      close(1);
+      dup(p[1]);
+      close(p[0]);
+      close(p[1]);
+      runcmd(pcmd->left);
+    }
+    if(fork1() == 0){
+      close(0);
+      dup(p[0]);
+      close(p[0]);
+      close(p[1]);
+      runcmd(pcmd->right);
+    }
+    close(p[0]);
+    close(p[1]);
+    wait();
+    wait();
     break;
-  }    
+  }
   exit(0);
 }
 
